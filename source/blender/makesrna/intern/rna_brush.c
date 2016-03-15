@@ -104,6 +104,7 @@ EnumPropertyItem rna_enum_brush_image_tool_items[] = {
 	{PAINT_TOOL_CLONE, "CLONE", ICON_BRUSH_CLONE, "Clone", ""},
 	{PAINT_TOOL_FILL, "FILL", ICON_BRUSH_TEXFILL, "Fill", ""},
 	{PAINT_TOOL_MASK, "MASK", ICON_BRUSH_TEXMASK, "Mask", ""},
+	{PAINT_TOOL_SHADING, "SHADING", ICON_BRUSH_TEXSHADING, "Shading", ""},
 	{0, NULL, 0, NULL, NULL}
 };
 

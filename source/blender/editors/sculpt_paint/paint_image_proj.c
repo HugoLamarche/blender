@@ -4949,7 +4949,7 @@ static void paint_proj_stroke_ps(
 		paint_brush_color_get(scene, brush, false, ps->mode == BRUSH_STROKE_INVERT, distance, pressure,  ps->paint_color, NULL);
 		srgb_to_linearrgb_v3_v3(ps->paint_color_linear, ps->paint_color);
 	}
-	else if (ps->tool == PAINT_TOOL_FILL) {
+	else if (ps->tool == PAINT_TOOL_FILL || ps->tool == PAINT_TOOL_SHADING) {
 		copy_v3_v3(ps->paint_color, BKE_brush_color_get(scene, brush));
 		srgb_to_linearrgb_v3_v3(ps->paint_color_linear, ps->paint_color);
 	}
@@ -5179,7 +5179,7 @@ void *paint_proj_new_stroke(bContext *C, Object *ob, const float mouse[2], int m
 	for (i = 0; i < ps_handle->ps_views_tot; i++) {
 		ProjPaintState *ps = ps_handle->ps_views[i];
 
-		ps->source = (ps->tool == PAINT_TOOL_FILL) ? PROJ_SRC_VIEW_FILL : PROJ_SRC_VIEW;
+		ps->source = (ps->tool == PAINT_TOOL_FILL || ps->tool == PAINT_TOOL_SHADING) ? PROJ_SRC_VIEW_FILL : PROJ_SRC_VIEW;
 		project_image_refresh_tagged(ps);
 
 		/* re-use! */
