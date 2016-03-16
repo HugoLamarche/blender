@@ -191,7 +191,8 @@ def brush_texpaint_common(panel, context, layout, brush, settings, projpaint=Fal
             col.prop(brush, "clone_alpha", text="Alpha")
     elif brush.image_tool == "SHADING":
         col.separator()
-        col.prop(brush, "blur_mode", text="Shading Mode")
+        col.prop(brush, "shading_mode")
+        col.prop(brush, "shading_factor", slider=True)
 
     col.separator()
 

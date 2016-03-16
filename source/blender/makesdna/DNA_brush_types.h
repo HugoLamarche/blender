@@ -137,6 +137,11 @@ typedef struct Brush {
 
 	float mask_stencil_pos[2];
 	float mask_stencil_dimension[2];
+
+	/* shading tool */
+	int shading_mode;
+	float shading_factor;
+
 } Brush;
 
 typedef struct PaletteColor {
@@ -331,6 +336,11 @@ typedef enum BlurKernelType {
 	KERNEL_GAUSSIAN,
 	KERNEL_BOX
 } BlurKernelType;
+
+typedef enum ShadingType {
+	SHADING_LIGHTEN,
+	SHADING_DARKEN
+} ShadingType;
 
 #define MAX_BRUSH_PIXEL_RADIUS 500
 
