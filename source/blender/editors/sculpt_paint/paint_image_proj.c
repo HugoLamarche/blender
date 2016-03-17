@@ -4419,6 +4419,78 @@ static void do_projectpaint_mask_f(ProjPaintState *ps, ProjPixel *projPixel, flo
 	}
 }
 
+static void do_projectpaint_shading(
+        ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask,
+        float dither, float u, float v)
+{
+	float rgba[4];
+	unsigned char rgba_ub[4];
+
+	/* Get current pixel color */
+	straight_uchar_to_premul_float(rgba, projPixel->pixel.ch_pt);
+
+	if (ps->is_texbrush) {
+		mul_v3_v3v3(rgba, texrgb, ps->paint_color_linear);
+		/* TODO(sergey): Support texture paint color space. */
+		linearrgb_to_srgb_v3_v3(rgba, rgba);
+	}
+	else {
+		//copy_v3_v3(rgb, ps->paint_color);
+		mul_v3_fl(rgba, 2.0f);
+		normalize_v3(rgba);
+	}
+
+	if (dither > 0.0f) {
+		float_to_byte_dither_v3(rgba_ub, rgba, dither, u, v);
+	}
+	else {
+		F4TOCHAR4(rgba, rgba_ub);
+	}
+	rgba_ub[3] = f_to_char(mask);
+
+	if (ps->do_masking) {
+		IMB_blend_color_byte(projPixel->pixel.ch_pt, projPixel->origColor.ch_pt, rgba_ub, ps->blend);
+	}
+	else {
+		IMB_blend_color_byte(projPixel->pixel.ch_pt, projPixel->pixel.ch_pt, rgba_ub, ps->blend);
+	}
+}
+
+static void do_projectpaint_shading_f(ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask)
+{
+	float rgba[4];
+	float lh, ls, lv;
+
+	rgb_to_hsv(projPixel->pixel.f_pt[0], projPixel->pixel.f_pt[1], projPixel->pixel.f_pt[2],
+			   &lh, &ls, &lv);
+
+	lv *= 0.8f;
+	ls *= 0.9f;
+
+	//CLAMP(lv, 0.0f, 1.0f);
+	//CLAMP(ls, 0.0f, 1.0f);
+
+	hsv_to_rgb(lh, ls, lv, &rgba[0], &rgba[1], &rgba[2]);
+
+	normalize_v3(rgba);
+
+	//copy_v3_v3(rgba, ps->paint_color_linear);
+
+
+	if (ps->is_texbrush)
+		mul_v3_v3(rgba, texrgb);
+	
+	mul_v3_fl(rgba, mask);
+	rgba[3] = mask;
+
+	if (ps->do_masking) {
+		IMB_blend_color_float(projPixel->pixel.f_pt, projPixel->origColor.f_pt, rgba, ps->blend);
+	}
+	else {
+		IMB_blend_color_float(projPixel->pixel.f_pt, projPixel->pixel.f_pt, rgba, ps->blend);
+	}
+}
+
 static void image_paint_partial_redraw_expand(
         ImagePaintPartialRedraw *cell,
         const ProjPixel *projPixel)
@@ -4764,6 +4836,10 @@ static void *do_projectpaint_thread(void *ph_v)
 								case PAINT_TOOL_MASK:
 									if (is_floatbuf) do_projectpaint_mask_f(ps, projPixel, mask);
 									else             do_projectpaint_mask(ps, projPixel, mask);
+									break;
+								case PAINT_TOOL_SHADING:
+									if (is_floatbuf) do_projectpaint_shading_f(ps, projPixel, texrgb, mask);
+									else             do_projectpaint_shading(ps, projPixel, texrgb, mask, ps->dither, projPixel->x_px, projPixel->y_px);
 									break;
 								default:
 									if (is_floatbuf) do_projectpaint_draw_f(ps, projPixel, texrgb, mask);
