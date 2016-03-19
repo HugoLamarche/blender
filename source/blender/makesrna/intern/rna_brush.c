@@ -514,6 +514,12 @@ static EnumPropertyItem *rna_Brush_direction_itemf(bContext *C, PointerRNA *ptr,
 		{0, NULL, 0, NULL, NULL}
 	};
 
+	static EnumPropertyItem prop_lighten_darken_items[] = {
+		{0, "LIGHTEN", 0, "Lighten", "Lighten effect of brush"},
+		{BRUSH_DIR_IN, "DARKEN", 0, "Darken", "Darken effect of brush"},
+		{0, NULL, 0, NULL, NULL}
+	};
+
 	Brush *me = (Brush *)(ptr->data);
 
 	switch (mode) {
@@ -562,6 +568,9 @@ static EnumPropertyItem *rna_Brush_direction_itemf(bContext *C, PointerRNA *ptr,
 			switch (me->imagepaint_tool) {
 				case PAINT_TOOL_SOFTEN:
 					return prop_soften_sharpen_items;
+
+				case PAINT_TOOL_SHADING:
+					return prop_lighten_darken_items;
 
 				default:
 					return prop_default_items;
@@ -858,12 +867,6 @@ static void rna_def_brush(BlenderRNA *brna)
 		{0, NULL, 0, NULL, NULL}
 	};
 
-	static EnumPropertyItem brush_shading_mode_items[] = {
-		{SHADING_LIGHTEN, "LIGHTEN", 0, "Lighten", ""},
-		{SHADING_DARKEN, "DARKEN", 0, "Darken", ""},
-		{0, NULL, 0, NULL, NULL}
-	};
-
 	srna = RNA_def_struct(brna, "Brush", "ID");
 	RNA_def_struct_ui_text(srna, "Brush", "Brush data-block for storing brush settings for painting and sculpting");
 	RNA_def_struct_ui_icon(srna, ICON_BRUSH_DATA);
@@ -1086,16 +1089,20 @@ static void rna_def_brush(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Mask Stencil Dimensions", "Dimensions of mask stencil in viewport");
 	RNA_def_property_update(prop, 0, "rna_Brush_update");
 
-	prop = RNA_def_property(srna, "shading_mode", PROP_ENUM, PROP_NONE);
-	RNA_def_property_enum_items(prop, brush_shading_mode_items);
-	RNA_def_property_ui_text(prop, "Shading Mode", "");
-	RNA_def_property_update(prop, 0, "rna_Brush_update");
-
-	prop = RNA_def_property(srna, "shading_factor", PROP_FLOAT, PROP_NONE);
+	prop = RNA_def_property(srna, "shading_value_factor", PROP_FLOAT, PROP_FACTOR);
+	RNA_def_property_float_sdna(prop, NULL, "shading_value_factor");
+	RNA_def_property_float_default(prop, 0.5f);
 	RNA_def_property_range(prop, 0.0, 1.0);
 	RNA_def_property_ui_range(prop, 0.0, 1.0, 0.001, 3);
-	RNA_def_property_float_sdna(prop, NULL, "shading_factor");
-	RNA_def_property_ui_text(prop, "Shading Factor", "Factor the represent the intensity of shading");
+	RNA_def_property_ui_text(prop, "Shading Value Factor", "Factor that represent the intensity of value changing");
+	RNA_def_property_update(prop, 0, "rna_Brush_update");
+
+	prop = RNA_def_property(srna, "shading_saturation_factor", PROP_FLOAT, PROP_FACTOR);
+	RNA_def_property_float_sdna(prop, NULL, "shading_saturation_factor");
+	RNA_def_property_float_default(prop, 0.25f);
+	RNA_def_property_range(prop, 0.0, 1.0);
+	RNA_def_property_ui_range(prop, 0.0, 1.0, 0.001, 3);
+	RNA_def_property_ui_text(prop, "Shading Saturation Factor", "Factor that represent the intensity of saturation changing");
 	RNA_def_property_update(prop, 0, "rna_Brush_update");
 
 	prop = RNA_def_property(srna, "sharp_threshold", PROP_FLOAT, PROP_NONE);

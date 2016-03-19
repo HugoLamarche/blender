@@ -4424,10 +4424,13 @@ static void do_projectpaint_shading(
         float dither, float u, float v)
 {
 	float rgba[4];
+	float hsv[3];
 	unsigned char rgba_ub[4];
+	Brush *brush = ps->brush;
 
 	/* Get current pixel color */
 	straight_uchar_to_premul_float(rgba, projPixel->pixel.ch_pt);
+
 
 	if (ps->is_texbrush) {
 		mul_v3_v3v3(rgba, texrgb, ps->paint_color_linear);
@@ -4435,9 +4438,15 @@ static void do_projectpaint_shading(
 		linearrgb_to_srgb_v3_v3(rgba, rgba);
 	}
 	else {
-		//copy_v3_v3(rgb, ps->paint_color);
-		mul_v3_fl(rgba, 2.0f);
-		normalize_v3(rgba);
+		rgb_to_hsv_v(rgba, hsv);
+
+		hsv[1] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_saturation_factor : brush->shading_saturation_factor;
+		hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
+
+		CLAMP(hsv[1], 0.0f, 1.0f);
+		CLAMP(hsv[2], 0.0f, 1.0f);
+
+		hsv_to_rgb_v(hsv, rgba);
 	}
 
 	if (dither > 0.0f) {
@@ -5097,6 +5106,9 @@ static void project_state_init(bContext *C, Object *ob, ProjPaintState *ps, int 
 			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 
 			ps->blurkernel = paint_new_blur_kernel(brush, true);
+		} else if (brush->imagepaint_tool == PAINT_TOOL_SHADING) {
+			ps->mode = (((ps->mode == BRUSH_STROKE_INVERT) ^ ((brush->flag & BRUSH_DIR_IN) != 0)) ?
+			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 		}
 
 		/* disable for 3d mapping also because painting on mirrored mesh can create "stripes" */

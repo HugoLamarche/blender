@@ -89,6 +89,9 @@ static void brush_defaults(Brush *brush)
 	brush->rgb[1] = 1.0f;
 	brush->rgb[2] = 1.0f;
 
+	brush->shading_value_factor = 0.5f;
+	brush->shading_saturation_factor = 0.25f;
+
 	zero_v3(brush->secondary_rgb);
 
 	/* BRUSH STROKE SETTINGS */

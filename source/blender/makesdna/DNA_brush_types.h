@@ -139,8 +139,8 @@ typedef struct Brush {
 	float mask_stencil_dimension[2];
 
 	/* shading tool */
-	int shading_mode;
-	float shading_factor;
+	float shading_value_factor;
+	float shading_saturation_factor;
 
 } Brush;
 
