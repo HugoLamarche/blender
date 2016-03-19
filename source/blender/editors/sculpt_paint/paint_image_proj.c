@@ -4431,22 +4431,20 @@ static void do_projectpaint_shading(
 	/* Get current pixel color */
 	straight_uchar_to_premul_float(rgba, projPixel->pixel.ch_pt);
 
+	rgb_to_hsv_v(rgba, hsv);
+
+	hsv[1] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_saturation_factor : brush->shading_saturation_factor;
+	hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
+
+	CLAMP(hsv[1], 0.0f, 1.0f);
+	CLAMP(hsv[2], 0.0f, 1.0f);
+
+	hsv_to_rgb_v(hsv, rgba);
 
 	if (ps->is_texbrush) {
-		mul_v3_v3v3(rgba, texrgb, ps->paint_color_linear);
+		mul_v3_v3(rgba, texrgb);
 		/* TODO(sergey): Support texture paint color space. */
 		linearrgb_to_srgb_v3_v3(rgba, rgba);
-	}
-	else {
-		rgb_to_hsv_v(rgba, hsv);
-
-		hsv[1] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_saturation_factor : brush->shading_saturation_factor;
-		hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
-
-		CLAMP(hsv[1], 0.0f, 1.0f);
-		CLAMP(hsv[2], 0.0f, 1.0f);
-
-		hsv_to_rgb_v(hsv, rgba);
 	}
 
 	if (dither > 0.0f) {
