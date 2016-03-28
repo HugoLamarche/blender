@@ -4419,6 +4419,84 @@ static void do_projectpaint_mask_f(ProjPaintState *ps, ProjPixel *projPixel, flo
 	}
 }
 
+static void do_projectpaint_dodge(
+        ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask,
+        float dither, float u, float v)
+{
+	float rgba[4];
+	float hsl[3];
+	unsigned char rgba_ub[4];
+	Brush *brush = ps->brush;
+
+	/* Get current pixel color */
+	straight_uchar_to_premul_float(rgba, projPixel->pixel.ch_pt);
+
+	rgb_to_hsl_v(rgba, hsl);
+
+	hsl[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->dodge_exposure_factor : brush->dodge_exposure_factor;
+	//hsl[2] *= ps->mode == BRUSH_STROKE_INVERT ? 1.0f - brush->shading_value_factor : 1.0f + brush->shading_value_factor;
+
+	CLAMP(hsl[2], 0.0f, 1.0f);
+
+	hsv_to_rgb_v(hsl, rgba);
+
+	if (ps->is_texbrush) {
+		mul_v3_v3(rgba, texrgb);
+		/* TODO(sergey): Support texture paint color space. */
+		linearrgb_to_srgb_v3_v3(rgba, rgba);
+	}
+
+	if (dither > 0.0f) {
+		float_to_byte_dither_v3(rgba_ub, rgba, dither, u, v);
+	}
+	else {
+		F4TOCHAR4(rgba, rgba_ub);
+	}
+	rgba_ub[3] = f_to_char(mask);
+
+	if (ps->do_masking) {
+		IMB_blend_color_byte(projPixel->pixel.ch_pt, projPixel->origColor.ch_pt, rgba_ub, ps->blend);
+	}
+	else {
+		IMB_blend_color_byte(projPixel->pixel.ch_pt, projPixel->pixel.ch_pt, rgba_ub, ps->blend);
+	}
+}
+
+static void do_projectpaint_dodge_f(ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask)
+{
+	float rgba[4];
+	float lh, ls, lv;
+
+	rgb_to_hsv(projPixel->pixel.f_pt[0], projPixel->pixel.f_pt[1], projPixel->pixel.f_pt[2],
+			   &lh, &ls, &lv);
+
+	lv *= 0.8f;
+	ls *= 0.9f;
+
+	//CLAMP(lv, 0.0f, 1.0f);
+	//CLAMP(ls, 0.0f, 1.0f);
+
+	hsv_to_rgb(lh, ls, lv, &rgba[0], &rgba[1], &rgba[2]);
+
+	normalize_v3(rgba);
+
+	//copy_v3_v3(rgba, ps->paint_color_linear);
+
+
+	if (ps->is_texbrush)
+		mul_v3_v3(rgba, texrgb);
+	
+	mul_v3_fl(rgba, mask);
+	rgba[3] = mask;
+
+	if (ps->do_masking) {
+		IMB_blend_color_float(projPixel->pixel.f_pt, projPixel->origColor.f_pt, rgba, ps->blend);
+	}
+	else {
+		IMB_blend_color_float(projPixel->pixel.f_pt, projPixel->pixel.f_pt, rgba, ps->blend);
+	}
+}
+
 static void image_paint_partial_redraw_expand(
         ImagePaintPartialRedraw *cell,
         const ProjPixel *projPixel)
@@ -4765,6 +4843,10 @@ static void *do_projectpaint_thread(void *ph_v)
 									if (is_floatbuf) do_projectpaint_mask_f(ps, projPixel, mask);
 									else             do_projectpaint_mask(ps, projPixel, mask);
 									break;
+								case PAINT_TOOL_DODGE:
+									if (is_floatbuf) do_projectpaint_dodge_f(ps, projPixel, texrgb, mask);
+									else             do_projectpaint_dodge(ps, projPixel, texrgb, mask, ps->dither, projPixel->x_px, projPixel->y_px);
+									break;
 								default:
 									if (is_floatbuf) do_projectpaint_draw_f(ps, projPixel, texrgb, mask);
 									else             do_projectpaint_draw(ps, projPixel, texrgb, mask, ps->dither, projPixel->x_px, projPixel->y_px);
@@ -4945,7 +5027,7 @@ static void paint_proj_stroke_ps(
 		ps->blend = IMB_BLEND_ERASE_ALPHA;
 
 	/* handle gradient and inverted stroke color here */
-	if (ps->tool == PAINT_TOOL_DRAW) {
+	if (ps->tool == PAINT_TOOL_DRAW || ps->tool == PAINT_TOOL_DODGE) {
 		paint_brush_color_get(scene, brush, false, ps->mode == BRUSH_STROKE_INVERT, distance, pressure,  ps->paint_color, NULL);
 		srgb_to_linearrgb_v3_v3(ps->paint_color_linear, ps->paint_color);
 	}
@@ -5021,11 +5103,14 @@ static void project_state_init(bContext *C, Object *ob, ProjPaintState *ps, int 
 			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 
 			ps->blurkernel = paint_new_blur_kernel(brush, true);
+		} else if (brush->imagepaint_tool == PAINT_TOOL_DODGE) {
+			ps->mode = (((ps->mode == BRUSH_STROKE_INVERT) ^ ((brush->flag & BRUSH_DIR_IN) != 0)) ?
+			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 		}
 
 		/* disable for 3d mapping also because painting on mirrored mesh can create "stripes" */
 		ps->do_masking = paint_use_opacity_masking(brush);
-		ps->is_texbrush = (brush->mtex.tex && brush->imagepaint_tool == PAINT_TOOL_DRAW) ? true : false;
+		ps->is_texbrush = (brush->mtex.tex && (brush->imagepaint_tool == PAINT_TOOL_DRAW || brush->imagepaint_tool == PAINT_TOOL_DODGE)) ? true : false;
 		ps->is_maskbrush = (brush->mask_mtex.tex) ? true : false;
 	}
 	else {

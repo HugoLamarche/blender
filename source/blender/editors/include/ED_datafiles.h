@@ -156,6 +156,9 @@ extern char datatoc_texfill_png[];
 extern int datatoc_texmask_png_size;
 extern char datatoc_texmask_png[];
 
+extern int datatoc_texdodge_png_size;
+extern char datatoc_texdodge_png[];
+
 extern int datatoc_thumb_png_size;
 extern char datatoc_thumb_png[];
 
