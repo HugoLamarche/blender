@@ -4433,8 +4433,8 @@ static void do_projectpaint_shading(
 
 	rgb_to_hsv_v(rgba, hsv);
 
-	hsv[1] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_saturation_factor : brush->shading_saturation_factor;
-	hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
+	//hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
+	hsv[2] *= ps->mode == BRUSH_STROKE_INVERT ? 1.0f - brush->shading_value_factor : 1.0f + brush->shading_value_factor;
 
 	CLAMP(hsv[1], 0.0f, 1.0f);
 	CLAMP(hsv[2], 0.0f, 1.0f);

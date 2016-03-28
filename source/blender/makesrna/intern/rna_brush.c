@@ -1097,14 +1097,6 @@ static void rna_def_brush(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Shading Value Factor", "Factor that represent the intensity of value changing");
 	RNA_def_property_update(prop, 0, "rna_Brush_update");
 
-	prop = RNA_def_property(srna, "shading_saturation_factor", PROP_FLOAT, PROP_FACTOR);
-	RNA_def_property_float_sdna(prop, NULL, "shading_saturation_factor");
-	RNA_def_property_float_default(prop, 0.25f);
-	RNA_def_property_range(prop, 0.0, 1.0);
-	RNA_def_property_ui_range(prop, 0.0, 1.0, 0.001, 3);
-	RNA_def_property_ui_text(prop, "Shading Saturation Factor", "Factor that represent the intensity of saturation changing");
-	RNA_def_property_update(prop, 0, "rna_Brush_update");
-
 	prop = RNA_def_property(srna, "sharp_threshold", PROP_FLOAT, PROP_NONE);
 	RNA_def_property_range(prop, 0.0, 100.0);
 	RNA_def_property_ui_range(prop, 0.0, 1.0, 1, 3);

@@ -193,7 +193,6 @@ def brush_texpaint_common(panel, context, layout, brush, settings, projpaint=Fal
         col.separator()
         col.row().prop(brush, "direction", expand=True)
         col.prop(brush, "shading_value_factor", slider=True)
-        col.prop(brush, "shading_saturation_factor", slider=True)
 
     col.separator()
 

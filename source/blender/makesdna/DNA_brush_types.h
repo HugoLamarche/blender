@@ -70,7 +70,7 @@ typedef struct Brush {
 
 	float normal_weight;
 	float rake_factor;  /* rake actual data (not texture), used for sculpt */
-	int pad;
+	int pad[2];
 
 	short blend;        /* blend mode */
 	short ob_mode;      /* & with ob->mode to see if the brush is compatible, use for display only. */
@@ -140,7 +140,6 @@ typedef struct Brush {
 
 	/* shading tool */
 	float shading_value_factor;
-	float shading_saturation_factor;
 
 } Brush;
 
