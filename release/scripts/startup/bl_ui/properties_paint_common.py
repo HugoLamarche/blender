@@ -189,10 +189,10 @@ def brush_texpaint_common(panel, context, layout, brush, settings, projpaint=Fal
         else:
             col.prop(brush, "clone_image", text="Image")
             col.prop(brush, "clone_alpha", text="Alpha")
-    elif brush.image_tool == "SHADING":
+    elif brush.image_tool == "DODGE":
         col.separator()
         col.row().prop(brush, "direction", expand=True)
-        col.prop(brush, "shading_value_factor", slider=True)
+        col.prop(brush, "dodge_exposure_factor", slider=True)
 
     col.separator()
 

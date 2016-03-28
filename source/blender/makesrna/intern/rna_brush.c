@@ -104,7 +104,7 @@ EnumPropertyItem rna_enum_brush_image_tool_items[] = {
 	{PAINT_TOOL_CLONE, "CLONE", ICON_BRUSH_CLONE, "Clone", ""},
 	{PAINT_TOOL_FILL, "FILL", ICON_BRUSH_TEXFILL, "Fill", ""},
 	{PAINT_TOOL_MASK, "MASK", ICON_BRUSH_TEXMASK, "Mask", ""},
-	{PAINT_TOOL_SHADING, "SHADING", ICON_BRUSH_TEXSHADING, "Shading", ""},
+	{PAINT_TOOL_DODGE, "DODGE", ICON_BRUSH_TEXDODGE, "Dodge", ""},
 	{0, NULL, 0, NULL, NULL}
 };
 
@@ -514,9 +514,9 @@ static EnumPropertyItem *rna_Brush_direction_itemf(bContext *C, PointerRNA *ptr,
 		{0, NULL, 0, NULL, NULL}
 	};
 
-	static EnumPropertyItem prop_lighten_darken_items[] = {
-		{0, "LIGHTEN", 0, "Lighten", "Lighten effect of brush"},
-		{BRUSH_DIR_IN, "DARKEN", 0, "Darken", "Darken effect of brush"},
+	static EnumPropertyItem prop_dodge_burn_items[] = {
+		{0, "DODGE", 0, "Dodge", "Dodge effect of brush"},
+		{BRUSH_DIR_IN, "BURN", 0, "Burn", "Burn effect of brush"},
 		{0, NULL, 0, NULL, NULL}
 	};
 
@@ -569,8 +569,8 @@ static EnumPropertyItem *rna_Brush_direction_itemf(bContext *C, PointerRNA *ptr,
 				case PAINT_TOOL_SOFTEN:
 					return prop_soften_sharpen_items;
 
-				case PAINT_TOOL_SHADING:
-					return prop_lighten_darken_items;
+				case PAINT_TOOL_DODGE:
+					return prop_dodge_burn_items;
 
 				default:
 					return prop_default_items;
@@ -1089,12 +1089,12 @@ static void rna_def_brush(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Mask Stencil Dimensions", "Dimensions of mask stencil in viewport");
 	RNA_def_property_update(prop, 0, "rna_Brush_update");
 
-	prop = RNA_def_property(srna, "shading_value_factor", PROP_FLOAT, PROP_FACTOR);
-	RNA_def_property_float_sdna(prop, NULL, "shading_value_factor");
+	prop = RNA_def_property(srna, "dodge_exposure_factor", PROP_FLOAT, PROP_FACTOR);
+	RNA_def_property_float_sdna(prop, NULL, "dodge_exposure_factor");
 	RNA_def_property_float_default(prop, 0.5f);
 	RNA_def_property_range(prop, 0.0, 1.0);
 	RNA_def_property_ui_range(prop, 0.0, 1.0, 0.001, 3);
-	RNA_def_property_ui_text(prop, "Shading Value Factor", "Factor that represent the intensity of value changing");
+	RNA_def_property_ui_text(prop, "Dodge Exposure Factor", "Factor that represent the how much the tool is strong");
 	RNA_def_property_update(prop, 0, "rna_Brush_update");
 
 	prop = RNA_def_property(srna, "sharp_threshold", PROP_FLOAT, PROP_NONE);

@@ -138,8 +138,8 @@ typedef struct Brush {
 	float mask_stencil_pos[2];
 	float mask_stencil_dimension[2];
 
-	/* shading tool */
-	float shading_value_factor;
+	/* dodge tool */
+	float dodge_exposure_factor;
 
 } Brush;
 
@@ -303,7 +303,7 @@ typedef enum BrushImagePaintTool {
 	PAINT_TOOL_CLONE = 3,
 	PAINT_TOOL_FILL = 4,
 	PAINT_TOOL_MASK = 5,
-	PAINT_TOOL_SHADING = 6
+	PAINT_TOOL_DODGE = 6
 } BrushImagePaintTool;
 
 /* direction that the brush displaces along */
@@ -335,11 +335,6 @@ typedef enum BlurKernelType {
 	KERNEL_GAUSSIAN,
 	KERNEL_BOX
 } BlurKernelType;
-
-typedef enum ShadingType {
-	SHADING_LIGHTEN,
-	SHADING_DARKEN
-} ShadingType;
 
 #define MAX_BRUSH_PIXEL_RADIUS 500
 

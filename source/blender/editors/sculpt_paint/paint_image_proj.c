@@ -4419,27 +4419,26 @@ static void do_projectpaint_mask_f(ProjPaintState *ps, ProjPixel *projPixel, flo
 	}
 }
 
-static void do_projectpaint_shading(
+static void do_projectpaint_dodge(
         ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask,
         float dither, float u, float v)
 {
 	float rgba[4];
-	float hsv[3];
+	float hsl[3];
 	unsigned char rgba_ub[4];
 	Brush *brush = ps->brush;
 
 	/* Get current pixel color */
 	straight_uchar_to_premul_float(rgba, projPixel->pixel.ch_pt);
 
-	rgb_to_hsv_v(rgba, hsv);
+	rgb_to_hsl_v(rgba, hsl);
 
-	//hsv[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->shading_value_factor : brush->shading_value_factor;
-	hsv[2] *= ps->mode == BRUSH_STROKE_INVERT ? 1.0f - brush->shading_value_factor : 1.0f + brush->shading_value_factor;
+	hsl[2] += ps->mode == BRUSH_STROKE_INVERT ? -brush->dodge_exposure_factor : brush->dodge_exposure_factor;
+	//hsl[2] *= ps->mode == BRUSH_STROKE_INVERT ? 1.0f - brush->shading_value_factor : 1.0f + brush->shading_value_factor;
 
-	CLAMP(hsv[1], 0.0f, 1.0f);
-	CLAMP(hsv[2], 0.0f, 1.0f);
+	CLAMP(hsl[2], 0.0f, 1.0f);
 
-	hsv_to_rgb_v(hsv, rgba);
+	hsv_to_rgb_v(hsl, rgba);
 
 	if (ps->is_texbrush) {
 		mul_v3_v3(rgba, texrgb);
@@ -4463,7 +4462,7 @@ static void do_projectpaint_shading(
 	}
 }
 
-static void do_projectpaint_shading_f(ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask)
+static void do_projectpaint_dodge_f(ProjPaintState *ps, ProjPixel *projPixel, const float texrgb[3], float mask)
 {
 	float rgba[4];
 	float lh, ls, lv;
@@ -4844,9 +4843,9 @@ static void *do_projectpaint_thread(void *ph_v)
 									if (is_floatbuf) do_projectpaint_mask_f(ps, projPixel, mask);
 									else             do_projectpaint_mask(ps, projPixel, mask);
 									break;
-								case PAINT_TOOL_SHADING:
-									if (is_floatbuf) do_projectpaint_shading_f(ps, projPixel, texrgb, mask);
-									else             do_projectpaint_shading(ps, projPixel, texrgb, mask, ps->dither, projPixel->x_px, projPixel->y_px);
+								case PAINT_TOOL_DODGE:
+									if (is_floatbuf) do_projectpaint_dodge_f(ps, projPixel, texrgb, mask);
+									else             do_projectpaint_dodge(ps, projPixel, texrgb, mask, ps->dither, projPixel->x_px, projPixel->y_px);
 									break;
 								default:
 									if (is_floatbuf) do_projectpaint_draw_f(ps, projPixel, texrgb, mask);
@@ -5028,7 +5027,7 @@ static void paint_proj_stroke_ps(
 		ps->blend = IMB_BLEND_ERASE_ALPHA;
 
 	/* handle gradient and inverted stroke color here */
-	if (ps->tool == PAINT_TOOL_DRAW || ps->tool == PAINT_TOOL_SHADING) {
+	if (ps->tool == PAINT_TOOL_DRAW || ps->tool == PAINT_TOOL_DODGE) {
 		paint_brush_color_get(scene, brush, false, ps->mode == BRUSH_STROKE_INVERT, distance, pressure,  ps->paint_color, NULL);
 		srgb_to_linearrgb_v3_v3(ps->paint_color_linear, ps->paint_color);
 	}
@@ -5104,14 +5103,14 @@ static void project_state_init(bContext *C, Object *ob, ProjPaintState *ps, int 
 			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 
 			ps->blurkernel = paint_new_blur_kernel(brush, true);
-		} else if (brush->imagepaint_tool == PAINT_TOOL_SHADING) {
+		} else if (brush->imagepaint_tool == PAINT_TOOL_DODGE) {
 			ps->mode = (((ps->mode == BRUSH_STROKE_INVERT) ^ ((brush->flag & BRUSH_DIR_IN) != 0)) ?
 			            BRUSH_STROKE_INVERT : BRUSH_STROKE_NORMAL);
 		}
 
 		/* disable for 3d mapping also because painting on mirrored mesh can create "stripes" */
 		ps->do_masking = paint_use_opacity_masking(brush);
-		ps->is_texbrush = (brush->mtex.tex && (brush->imagepaint_tool == PAINT_TOOL_DRAW || brush->imagepaint_tool == PAINT_TOOL_SHADING)) ? true : false;
+		ps->is_texbrush = (brush->mtex.tex && (brush->imagepaint_tool == PAINT_TOOL_DRAW || brush->imagepaint_tool == PAINT_TOOL_DODGE)) ? true : false;
 		ps->is_maskbrush = (brush->mask_mtex.tex) ? true : false;
 	}
 	else {
