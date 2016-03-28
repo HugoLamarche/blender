@@ -303,7 +303,7 @@ typedef enum BrushImagePaintTool {
 	PAINT_TOOL_CLONE = 3,
 	PAINT_TOOL_FILL = 4,
 	PAINT_TOOL_MASK = 5,
-	PAINT_TOOL_DODGE = 6
+	PAINT_TOOL_DODGE = 6,
 } BrushImagePaintTool;
 
 /* direction that the brush displaces along */
